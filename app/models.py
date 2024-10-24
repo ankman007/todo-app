@@ -4,13 +4,14 @@ from pydantic import BaseModel
 from psycopg2 import DatabaseError
 from app.database import get_db_connection
 from psycopg2.extras import RealDictCursor
-from app.schemas import TodoItemResponse, TodoListResponse
+# from app.schemas import TodoItemResponse, TodoListResponse
 
 class ToDo(BaseModel):
     todo_id: int
     title: str
     complete: bool = False 
-
+    
+    @classmethod
     def update_todo(self, todo_id: int, title:str, complete: bool):
         """Update the todo item in the database."""
         try:
@@ -31,6 +32,7 @@ class ToDo(BaseModel):
             cursor.close()
             conn.close()   
 
+    @classmethod
     def delete_todo(self, todo_id: int):
         """Delete the todo item from the database."""
         try:
@@ -51,7 +53,7 @@ class ToDo(BaseModel):
             conn.close()
     
     @classmethod
-    def get_todo(cls, todo_id: int) -> TodoItemResponse:
+    def get_todo(cls, todo_id: int):
         """Fetch a todo item from the database by id."""
         try:
             conn = get_db_connection()
@@ -78,7 +80,7 @@ class ToDo(BaseModel):
             conn.close()
             
     @classmethod
-    def get_all_todos(cls) -> TodoListResponse:
+    def get_todos(cls):
         """Fetch all todo items from the database"""
         try: 
             conn = get_db_connection()
@@ -87,8 +89,7 @@ class ToDo(BaseModel):
             SELECT * FROM todo_db
             ''')
             todos = cursor.fetchall()
-            todo_items = [TodoItemResponse(**todo) for todo in todos]
-            return todo_items
+            return todos
         
         except DatabaseError as e:
             logger.error(f"Error fetching todo items: {e}")
@@ -107,7 +108,8 @@ class ToDo(BaseModel):
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         INSERT INTO todo_db (title, completed)
-                        VALUES (%s, %s) RETURNING todo_id;
+                        VALUES (%s, %s) 
+                        RETURNING todo_id;
                     ''', (title, complete))
 
                     todo_id = cursor.fetchone()[0]
@@ -116,4 +118,5 @@ class ToDo(BaseModel):
 
         except DatabaseError as e:
             logger.error(f"Error adding todo item: {e}")
-            return -1  # Or handle as appropriate
+            print(f"DatabaseError: {e}")  # Add this line to print the error directly.
+            return -1

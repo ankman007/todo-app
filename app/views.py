@@ -19,9 +19,9 @@ def index():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get('/get_todos')
-def get_all_todos():
-    print(type(ToDo.get_all_todos()))
-    return ToDo.get_all_todos()
+def get_todos():
+    print(type(ToDo.get_todos()))
+    return ToDo.get_todos()
 
 @router.get('/get_todo/{todo_id}')
 def get_todo(todo_id: int) -> TodoItemResponse:
@@ -31,7 +31,7 @@ def get_todo(todo_id: int) -> TodoItemResponse:
     return todo
 
 @router.put('/update_todo/{todo_id}')
-def update_todo(todo_id: int, updated_todo: TodoItemResponse):
+def update_todo(todo_id: int, updated_todo: TodoCreate):
     if not ToDo.get_todo(todo_id):
         raise HTTPException(status_code=404, detail="ToDo not found")
     ToDo.update_todo(todo_id=todo_id, title=updated_todo.title, complete=updated_todo.complete)

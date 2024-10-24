@@ -27,10 +27,11 @@ def get_db_connection():
 def create_table(conn):
     cursor = conn.cursor()
     create_table_query = """
-    CREATE TABLE IF NOT EXISTS todo_db
+    CREATE TABLE IF NOT EXISTS todo_db (
     todo_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    completed BOOLEAN NOT NULL DEFAULT FALSE
+    );
     """
     try: 
         cursor.execute(create_table_query)
