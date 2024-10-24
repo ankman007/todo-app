@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from psycopg2 import DatabaseError
 from app.database import get_db_connection
 from psycopg2.extras import RealDictCursor
-# from app.schemas import TodoItemResponse, TodoListResponse
 
 class ToDo(BaseModel):
     todo_id: int
@@ -118,5 +117,5 @@ class ToDo(BaseModel):
 
         except DatabaseError as e:
             logger.error(f"Error adding todo item: {e}")
-            print(f"DatabaseError: {e}")  # Add this line to print the error directly.
+            print(f"DatabaseError: {e}")  
             return -1
