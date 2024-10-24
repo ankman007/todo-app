@@ -17,7 +17,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                UPDATE todo_db1
+                UPDATE todo_db
                 SET title = %s, completed = %s 
                 WHERE todo_id = %s
             ''', (title, complete, todo_id))
@@ -37,7 +37,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                DELETE FROM todo_db1
+                DELETE FROM todo_db 
                 WHERE todo_id = %s
             ''', (todo_id,))
 
@@ -57,7 +57,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-                SELECT * FROM todo_db1
+                SELECT * FROM todo_db
                 WHERE todo_id = %s
             ''', (todo_id,))
             
@@ -78,13 +78,13 @@ class ToDo(BaseModel):
             conn.close()
             
     @classmethod
-    def get_all_todo(cls) -> TodoListResponse:
+    def get_all_todos(cls) -> TodoListResponse:
         """Fetch all todo items from the database"""
         try: 
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-            SELECT * FROM todo_db1
+            SELECT * FROM todo_db
             ''')
             todos = cursor.fetchall()
             todo_items = [TodoItemResponse(**todo) for todo in todos]
@@ -103,21 +103,17 @@ class ToDo(BaseModel):
     def add_todo(title: str, complete: bool) -> int:
         """Add a new todo item to the database."""
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO todo_db1 (title, completed)
-                VALUES (%s, %s) RETURNING todo_id;
-            ''', (title, complete))
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute('''
+                        INSERT INTO todo_db (title, completed)
+                        VALUES (%s, %s) RETURNING todo_id;
+                    ''', (title, complete))
 
-            todo_id = cursor.fetchone()[0]
-            conn.commit()
-            return todo_id
+                    todo_id = cursor.fetchone()[0]
+                    conn.commit()
+                    return todo_id
 
         except DatabaseError as e:
             logger.error(f"Error adding todo item: {e}")
-            conn.rollback()
-
-        finally:
-            cursor.close()
-            conn.close()
+            return -1  # Or handle as appropriate

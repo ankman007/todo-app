@@ -14,7 +14,7 @@ def get_db_connection():
             dbname=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
+            host=os.getenv("DB_HOST"),  
             port=os.getenv("PORT"),
         )
         logger.info("Database connection established successfully.")
@@ -23,3 +23,23 @@ def get_db_connection():
     except psycopg2.OperationalError as e:
         logger.error(f"Failed to connect to database: {e}")
         raise
+
+def create_table(conn):
+    cursor = conn.cursor()
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS todo_db
+    todo_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    """
+    try: 
+        cursor.execute(create_table_query)
+        conn.commit()
+        logger.info("Table 'todo_db' created successfully.")
+    except Exception as e:
+        logger.error(f"Error creating table: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+        
