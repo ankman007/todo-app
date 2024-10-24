@@ -2,9 +2,9 @@ from typing import List
 from loguru import logger
 from pydantic import BaseModel
 from psycopg2 import DatabaseError
-from database import get_db_connection
+from app.database import get_db_connection
 from psycopg2.extras import RealDictCursor
-from schemas import TodoCreate, TodoItemResponse, TodoListResponse
+from app.schemas import TodoItemResponse, TodoListResponse
 
 class ToDo(BaseModel):
     todo_id: int
@@ -17,7 +17,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                UPDATE todo_db
+                UPDATE todo_db1
                 SET title = %s, completed = %s 
                 WHERE todo_id = %s
             ''', (title, complete, todo_id))
@@ -37,7 +37,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                DELETE FROM todo_db 
+                DELETE FROM todo_db1
                 WHERE todo_id = %s
             ''', (todo_id,))
 
@@ -57,7 +57,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-                SELECT * FROM todo_db
+                SELECT * FROM todo_db1
                 WHERE todo_id = %s
             ''', (todo_id,))
             
@@ -84,7 +84,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-            SELECT * FROM todo_db
+            SELECT * FROM todo_db1
             ''')
             todos = cursor.fetchall()
             todo_items = [TodoItemResponse(**todo) for todo in todos]
@@ -106,7 +106,7 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO todo_db (title, completed)
+                INSERT INTO todo_db1 (title, completed)
                 VALUES (%s, %s) RETURNING todo_id;
             ''', (title, complete))
 
