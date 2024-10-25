@@ -17,9 +17,11 @@ class ToDo(BaseModel):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                UPDATE todo_db
-                SET title = %s, completed = %s 
-                WHERE todo_id = %s
+            INSERT INTO todo_db (title, completed)
+            VALUES (%s, %s)
+            ON CONFLICT (title)
+            DO UPDATE SET completed = EXCLUDED.completed
+            RETURNING todo_id;
             ''', (title, complete, todo_id))
 
             conn.commit()
@@ -99,15 +101,17 @@ class ToDo(BaseModel):
             cursor.close()
             conn.close()
             
-    @staticmethod
+    @classmethod
     def add_todo(title: str, complete: bool) -> int:
-        """Add a new todo item to the database."""
+        """Add a new todo item to the database, or update if it already exists."""
         try:
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         INSERT INTO todo_db (title, completed)
-                        VALUES (%s, %s) 
+                        VALUES (%s, %s)
+                        ON CONFLICT (title)
+                        DO UPDATE SET completed = EXCLUDED.completed
                         RETURNING todo_id;
                     ''', (title, complete))
 
@@ -116,6 +120,6 @@ class ToDo(BaseModel):
                     return todo_id
 
         except DatabaseError as e:
-            logger.error(f"Error adding todo item: {e}")
+            logger.error(f"Error adding or updating todo item: {e}")
             print(f"DatabaseError: {e}")  
             return -1
