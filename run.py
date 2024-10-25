@@ -3,7 +3,6 @@ from app.database import get_db_connection
 from psycopg2 import DatabaseError
 from loguru import logger
 
-# Create table query
 create_table_query = """
 CREATE TABLE IF NOT EXISTS todo_db (
     todo_id SERIAL PRIMARY KEY,
@@ -12,10 +11,11 @@ CREATE TABLE IF NOT EXISTS todo_db (
 );
 """
 
-# Insert query
 insert_query = """
 INSERT INTO todo_db (title, completed)
 VALUES (%s, %s)
+ON CONFLICT (title)
+DO UPDATE SET completed = EXCLUDED.completed;
 """
 
 todos = [
@@ -24,30 +24,13 @@ todos = [
     ('Fill bottles', False),
 ]
 
-conn = None  
-cursor = None  
-
 try: 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Create the table
-    cursor.execute(create_table_query)
-
-    # Insert multiple rows
-    execute_batch(cursor, insert_query, todos)
-    conn.commit()
-    logger.info("Multiple rows inserted successfully.")
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor: 
+            cursor.execute(create_table_query)
+            execute_batch(cursor, insert_query, todos)
+            conn.commit()
+            logger.info("Multiple rows inserted successfully.")
 
 except DatabaseError as e:
-    if conn: 
-        conn.rollback()  
     logger.error(f"Error inserting multiple todo items: {e}")
-
-finally: 
-    if cursor: 
-        cursor.close()  
-    if conn: 
-        conn.close()  
-
-logger.info("Hello world")
