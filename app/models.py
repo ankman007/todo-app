@@ -11,6 +11,28 @@ class ToDo(BaseModel):
     complete: bool = False 
     
     @classmethod
+    def add_todo(cls, title: str, complete: bool):
+        """Add a new todo item to the database, or update if it already exists."""
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute('''
+                        INSERT INTO todo_db (title, completed)
+                        VALUES (%s, %s)
+                        RETURNING todo_id 
+                    ''', (title, complete))
+
+                    result = cursor.fetchone()
+                    todo_id = result[0] if result else None
+                    conn.commit()
+                    return todo_id
+
+        except DatabaseError as e:
+            logger.error(f"Error adding todo item: {e}")
+            conn.rollback()  
+            return None
+    
+    @classmethod
     def update_todo(cls, todo_id: int, title: str, complete: bool):
         """Update the todo item in the database."""
         try:
@@ -28,6 +50,7 @@ class ToDo(BaseModel):
                     logger.info(f"Todo item {todo_id} updated successfully.")
         except DatabaseError as e:
             logger.error(f"Error updating todo item {todo_id}: {e}")
+            conn.rollback()  
 
     @classmethod
     def delete_todo(cls, todo_id: int):

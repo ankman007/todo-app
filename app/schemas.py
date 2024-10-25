@@ -12,4 +12,3 @@ class TodoItemResponse(BaseModel):
 
 class TodoListResponse(BaseModel):
     todos: List[TodoItemResponse]
-    
