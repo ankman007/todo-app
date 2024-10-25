@@ -104,25 +104,3 @@ class ToDo(BaseModel):
         except DatabaseError as e:
             logger.error(f"Error fetching todo items: {e}")
             return []
-
-    @classmethod
-    def add_todo(cls, title: str, complete: bool) -> int:
-        """Add a new todo item to the database, or update if it already exists."""
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(''' 
-                        INSERT INTO todo_db (title, completed)
-                        VALUES (%s, %s)
-                        ON CONFLICT (title)
-                        DO UPDATE SET completed = EXCLUDED.completed
-                        RETURNING todo_id;
-                    ''', (title, complete))
-
-                    todo_id = cursor.fetchone()[0]
-                    conn.commit()
-                    return todo_id
-        except DatabaseError as e:
-            logger.error(f"Error adding or updating todo item: {e}")
-            print(f"DatabaseError: {e}")  
-            return -1
